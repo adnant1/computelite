@@ -1,4 +1,6 @@
-package model
+package cluster
+
+import "github.com/adnant1/computelite/pkg/scheduler"
 
 type ClusterState struct {
 	Nodes		map[string]*Node // Mapping of node IDs to Node structs
@@ -9,6 +11,6 @@ type ClusterState struct {
 // SubmitJob adds a new job to the pending jobs queue
 // for now assume all invariants are true
 // does not schedule any jobs, only adds to the JobQueue
-func (cs *ClusterState) SubmitJob(job *Job) {
+func (cs *ClusterState) SubmitJob(job *scheduler.Job) {
 	cs.PendingJobs.Enqueue(job)
 }

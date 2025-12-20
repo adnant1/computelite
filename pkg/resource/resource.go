@@ -1,4 +1,4 @@
-package model
+package resource
 
 type Resource struct {
 	CPU    int64 // CPU resource in millicores

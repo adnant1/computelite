@@ -1,17 +1,19 @@
-package model
+package cluster
+
+import "github.com/adnant1/computelite/pkg/scheduler"
 
 // JobQueue represents a simple FIFO queue for jobs
 type JobQueue struct {
-	jobs []*Job
+	jobs []*scheduler.Job
 }
 
 // Enqueue adds a job to the end of the queue
-func (q *JobQueue) Enqueue(job *Job) {
+func (q *JobQueue) Enqueue(job *scheduler.Job) {
 	q.jobs = append(q.jobs, job)
 }
 
 // Dequeue removes and returns the job at the front of the queue
-func (q *JobQueue) Dequeue() (*Job, bool) {
+func (q *JobQueue) Dequeue() (*scheduler.Job, bool) {
 	if len(q.jobs) == 0 {
 		return nil, false
 	}
@@ -23,7 +25,7 @@ func (q *JobQueue) Dequeue() (*Job, bool) {
 }
 
 // Peek returns the job at the front of the queue without removing it
-func (q *JobQueue) Peek() (*Job, bool) {
+func (q *JobQueue) Peek() (*scheduler.Job, bool) {
 	if len(q.jobs) == 0 {
 		return nil, false
 	}
