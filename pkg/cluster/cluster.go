@@ -14,3 +14,8 @@ type ClusterState struct {
 func (cs *ClusterState) SubmitJob(job *scheduler.Job) {
 	cs.PendingJobs.Enqueue(job)
 }
+
+// AddNode adds a new node to the cluster state
+func (cs *ClusterState) AddNode(node *Node) {
+	cs.Nodes[node.ID] = node
+}
