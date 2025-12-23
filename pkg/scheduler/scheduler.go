@@ -18,8 +18,8 @@ func NewScheduler(cluster *cluster.ClusterState) *Scheduler {
 // SubmitJob adds a new job to the pending jobs queue
 // does not schedule any jobs, only adds to the JobQueue
 func (s *Scheduler) SubmitJob(job *Job) {
-	job.State = Pending
 	s.PendingJobs.Enqueue(job)
+	job.State = Pending
 }
 
 // ScheduleOne attempts to schedule one pending job onto a suitable node
