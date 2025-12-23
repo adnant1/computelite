@@ -40,3 +40,13 @@ func (s *Scheduler) ScheduleOne() bool {
 	s.PendingJobs.Enqueue(job)
 	return false // no suitable node found
 }
+
+// ScheduleAll attempts to schedule all pending jobs
+// only runs a single pass through the pending jobs
+func (s *Scheduler) ScheduleAll() {
+	for {
+		if !s.ScheduleOne() {
+			break
+		}
+	}
+}
