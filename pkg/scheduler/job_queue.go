@@ -5,6 +5,12 @@ type JobQueue struct {
 	jobs []*Job
 }
 
+// Jobs returns a snapshot of pending jobs
+// this is read-only and intended for observability/debugging
+func (q *JobQueue) Jobs() []*Job {
+	return q.jobs
+}
+
 // Enqueue adds a job to the end of the queue
 func (q *JobQueue) Enqueue(job *Job) {
 	q.jobs = append(q.jobs, job)
