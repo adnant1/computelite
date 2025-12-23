@@ -7,6 +7,14 @@ type Scheduler struct {
 	PendingJobs *JobQueue             // List of pending jobs waiting to be scheduled
 }
 
+// NewScheduler initializes and returns a new Scheduler
+func NewScheduler(cluster *cluster.ClusterState) *Scheduler {
+	return &Scheduler{
+		Cluster:     cluster,
+		PendingJobs: &JobQueue{},
+	}
+}
+
 // SubmitJob adds a new job to the pending jobs queue
 // does not schedule any jobs, only adds to the JobQueue
 func (s *Scheduler) SubmitJob(job *Job) {
