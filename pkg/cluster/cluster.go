@@ -1,5 +1,10 @@
 package cluster
 
+import (
+	"fmt"
+	"time"
+)
+
 type ClusterState struct {
 	Nodes		map[string]*Node // Mapping of node IDs to Node structs
 	RunningJobs	map[int64]*Node  // Mapping of running job IDs to their assigned nodes
@@ -16,4 +21,15 @@ func NewCluster() *ClusterState {
 // AddNode adds a new node to the cluster state
 func (cs *ClusterState) AddNode(node *Node) {
 	cs.Nodes[node.ID] = node
+}
+
+// RecordHeartbeat updates the last heartbeat timestamp for a given node
+func (cs *ClusterState) RecordHeartbeat(nodeID string) error {
+	node, exists := cs.Nodes[nodeID]
+	if !exists {
+		return fmt.Errorf("node with ID %s not found", nodeID)
+	}
+
+	node.LastHeartbeat = time.Now()
+	return nil
 }
