@@ -24,3 +24,15 @@ type Node struct {
 	Health        NodeHealth	    // Current health status of the node
 	LastHeartbeat time.Time         // Last heartbeat timestamp from the node
 }
+
+// String returns a string representation of the NodeHealth
+func (h NodeHealth) String() string {
+	switch h {
+	case Healthy:
+		return "Healthy"
+	case Unhealthy:
+		return "Unhealthy"
+	default:
+		return "Unknown"
+	}
+}

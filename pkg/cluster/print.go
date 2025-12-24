@@ -39,3 +39,18 @@ func (cs *ClusterState) PrintRunningJobs() {
 		fmt.Printf("Job %d -> %s\n", jobID, node.ID)
 	}
 }
+
+// PrintNodeStatus prints the health and last heartbeat of each node.
+func (cs *ClusterState) PrintNodeStatus() {
+	fmt.Println("\n=== Node Status ===")
+
+	for _, node := range cs.Nodes {
+		fmt.Printf("Node %s:\n", node.ID)
+		fmt.Printf("  Health: %s\n", node.Health)
+		if !node.LastHeartbeat.IsZero() {
+			fmt.Printf("  Last Heartbeat: %s\n", node.LastHeartbeat.Format("2006-01-02 15:04:05"))
+		} else {
+			fmt.Printf("  Last Heartbeat: Never\n")
+		}
+	}
+}
