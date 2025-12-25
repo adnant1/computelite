@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"time"
 
 	"github.com/adnant1/computelite/pkg/cluster"
@@ -44,6 +45,7 @@ func (hc *HealthController) reconcile() {
 
 		if node.Health != desiredHealth {
 			hc.clusterState.UpdateNodeHealth(nodeID, desiredHealth)
+			log.Printf("[health-controller] node=%s health changed to %s", nodeID, desiredHealth)
 		}
 	}
 }

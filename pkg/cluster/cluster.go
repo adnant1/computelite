@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -21,6 +22,11 @@ func NewCluster() *ClusterState {
 // AddNode adds a new node to the cluster state
 func (cs *ClusterState) AddNode(node *Node) {
 	cs.Nodes[node.ID] = node
+	log.Printf("[cluster] node=%s added (cpu=%d, mem=%d)\n",
+		node.ID,
+		node.TotalCapacity.CPU,
+		node.TotalCapacity.Memory,
+	)
 }
 
 // RecordHeartbeat updates the last heartbeat timestamp for a given node

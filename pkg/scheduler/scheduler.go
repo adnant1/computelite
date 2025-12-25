@@ -1,6 +1,10 @@
 package scheduler
 
-import "github.com/adnant1/computelite/pkg/cluster"
+import (
+	"log"
+
+	"github.com/adnant1/computelite/pkg/cluster"
+)
 
 type Scheduler struct {
 	Cluster     *cluster.ClusterState // Reference to the cluster the scheduler manages
@@ -20,6 +24,11 @@ func NewScheduler(cluster *cluster.ClusterState) *Scheduler {
 func (s *Scheduler) SubmitJob(job *Job) {
 	s.PendingJobs.Enqueue(job)
 	job.State = Pending
+	log.Printf("[scheduler] job=%d submitted (cpu=%d, mem=%d)\n",
+		job.ID,
+		job.Requires.CPU,
+		job.Requires.Memory,
+	)
 }
 
 // ScheduleOne attempts to schedule one pending job onto a suitable node
@@ -42,10 +51,13 @@ func (s *Scheduler) ScheduleOne() bool {
 			s.Cluster.RunningJobs[job.ID] = node
 			job.State = Running
 
+			log.Printf("[scheduler] job=%d scheduled on node=%s\n", job.ID, node.ID)
 			return true
 		}
 	}
+
 	s.PendingJobs.Enqueue(job)
+	log.Printf("[scheduler] job=%d pending: insufficient resources\n", job.ID)
 	return false // no suitable node found
 }
 
