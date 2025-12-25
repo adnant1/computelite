@@ -20,3 +20,30 @@ func NewHealthController(cs *cluster.ClusterState, interval time.Duration) *Heal
 		reconcileInterval: interval,
 	}
 }
+
+// Run begins monitoring and updating
+func (hc *HealthController) Run() {
+	ticker := time.NewTicker(hc.reconcileInterval)
+	defer ticker.Stop()
+
+	// will soon add stop channel handling
+	for {
+		select {
+		case <-ticker.C:
+			hc.reconcile()
+		}
+	}
+}
+
+// reconcile checks the health of each node and updates their status accordingly
+func (hc *HealthController) reconcile() {
+	now := time.Now()
+
+	for nodeID, node := range hc.clusterState.Nodes {
+		desiredHealth := cluster.EvaluateNodeHealth(node.LastHeartbeat, now)
+
+		if node.Health != desiredHealth {
+			hc.clusterState.UpdateNodeHealth(nodeID, desiredHealth)
+		}
+	}
+}
