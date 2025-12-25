@@ -33,3 +33,17 @@ func (cs *ClusterState) RecordHeartbeat(nodeID string) error {
 	node.LastHeartbeat = time.Now()
 	return nil
 }
+
+// UpdateNodeHealth updates the health status of a given node
+func (cs *ClusterState) UpdateNodeHealth(nodeID string, newHealth NodeHealth) error {
+	node, exists := cs.Nodes[nodeID]
+	if !exists {
+		return fmt.Errorf("node with ID %s not found", nodeID)
+	}
+
+	if node.Health != newHealth {
+		node.Health = newHealth
+	}
+
+	return nil
+}
