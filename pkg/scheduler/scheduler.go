@@ -49,7 +49,8 @@ func (s *Scheduler) ScheduleOne() bool {
 			node.Allocated.CPU += job.Requires.CPU
 			node.Allocated.Memory += job.Requires.Memory
 
-			s.Cluster.RunningJobs[job.ID] = node
+			// will update this when implementing scheduler controller
+			// s.Cluster.RunningJobs[job.ID] = node
 			job.State = api.Running
 
 			log.Printf("[scheduler] job=%d scheduled on node=%s\n", job.ID, node.ID)

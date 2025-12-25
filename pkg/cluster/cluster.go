@@ -10,14 +10,14 @@ import (
 
 type ClusterState struct {
 	Nodes		map[string]*api.Node // Mapping of node IDs to Node structs
-	RunningJobs	map[int64]*api.Node  // Mapping of running job IDs to their assigned nodes
+	Jobs		map[int64]*api.Job   // Mapping of job IDs to their Job structs
 }
 
 // NewCluster initializes and returns a new ClusterState
 func NewCluster() *ClusterState {
 	return &ClusterState{
-		Nodes:		 make(map[string]*api.Node),
-		RunningJobs: make(map[int64]*api.Node),
+		Nodes: make(map[string]*api.Node),
+		Jobs:  make(map[int64]*api.Job),
 	}
 }
 
@@ -55,3 +55,32 @@ func (cs *ClusterState) UpdateNodeHealth(nodeID string, newHealth api.NodeHealth
 
 	return nil
 }
+
+// UpdateJobState updates the state of a given job enforcing valid state transitions
+func (cs *ClusterState) UpdateJobState(jobID int64, newState api.JobState) error {
+	job, exists := cs.Jobs[jobID]
+	if !exists {
+		return fmt.Errorf("job with ID %d not found", jobID)
+	}
+
+	if job.State == newState {
+		return nil
+	}
+
+	allowed := map[api.JobState]map[api.JobState]bool{
+		api.Pending:   {api.Assigned: true},
+		api.Assigned:  {api.Running: true, api.Evicted: true},
+		api.Running:   {api.Succeeded: true, api.Failed: true, api.Evicted: true},
+		api.Evicted:   {api.Pending: true},
+		api.Succeeded: {},
+		api.Failed:    {},
+	}
+
+	if !allowed[job.State][newState] {
+		return fmt.Errorf("job %d: invalid state transition from %v to %v", job.ID, job.State, newState)
+	}
+
+	job.State = newState
+	return nil
+}
+

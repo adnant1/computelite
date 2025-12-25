@@ -2,11 +2,13 @@ package cluster
 
 import "fmt"
 
+// TODO: Update these print functions after implementing job scheduling and tracking.
+
 // PrintSummary prints a high-level overview of the cluster state.
 func (cs *ClusterState) PrintSummary() {
 	fmt.Println("=== Cluster Summary ===")
 	fmt.Printf("Nodes: %d\n", len(cs.Nodes))
-	fmt.Printf("Running Jobs: %d\n", len(cs.RunningJobs))
+	fmt.Printf("Running Jobs: %d\n", len(cs.Jobs))
 }
 
 // PrintNodeUtilization prints resource usage for each node.
@@ -30,13 +32,13 @@ func (cs *ClusterState) PrintNodeUtilization() {
 func (cs *ClusterState) PrintRunningJobs() {
 	fmt.Println("\n=== Running Jobs ===")
 
-	if len(cs.RunningJobs) == 0 {
+	if len(cs.Jobs) == 0 {
 		fmt.Println("No running jobs")
 		return
 	}
 
-	for jobID, node := range cs.RunningJobs {
-		fmt.Printf("Job %d -> %s\n", jobID, node.ID)
+	for jobID, job := range cs.Jobs {
+		fmt.Printf("Job %d -> %d\n", jobID, job.ID)
 	}
 }
 
