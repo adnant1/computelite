@@ -1,10 +1,6 @@
-package cluster
+package api
 
-import (
-	"time"
-
-	"github.com/adnant1/computelite/pkg/resource"
-)
+import "time"
 
 type NodeHealth int
 
@@ -18,8 +14,8 @@ const (
 type Node struct {
 	ID            string
 
-	TotalCapacity resource.Resource // Total resource capacity of the node
-	Allocated     resource.Resource // Currently allocated resources on the node
+	TotalCapacity Resource // Total resource capacity of the node
+	Allocated     Resource // Currently allocated resources on the node
 
 	Health        NodeHealth	    // Current health status of the node
 	LastHeartbeat time.Time         // Last heartbeat timestamp from the node

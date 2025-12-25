@@ -1,18 +1,22 @@
 package cluster
 
-import "time"
+import (
+	"time"
+
+	"github.com/adnant1/computelite/pkg/api"
+)
 
 const HeartbeatTimeout = 15 * time.Second
 
 // EvaluateNodeHealth determines the health status of a node based on its last heartbeat timestamp
-func EvaluateNodeHealth(lastHeartbeat time.Time, now time.Time) NodeHealth {
+func EvaluateNodeHealth(lastHeartbeat time.Time, now time.Time) api.NodeHealth {
 	if lastHeartbeat.IsZero() {
-		return Unknown
+		return api.Unknown
 	}
 
 	if now.Sub(lastHeartbeat) > HeartbeatTimeout {
-		return Unhealthy
+		return api.Unhealthy
 	}
 
-	return Healthy
+	return api.Healthy
 }

@@ -1,23 +1,25 @@
 package scheduler
 
+import "github.com/adnant1/computelite/pkg/api"
+
 // JobQueue represents a simple FIFO queue for jobs
 type JobQueue struct {
-	jobs []*Job
+	jobs []*api.Job
 }
 
 // Jobs returns a snapshot of pending jobs
 // this is read-only and intended for observability/debugging
-func (q *JobQueue) Jobs() []*Job {
+func (q *JobQueue) Jobs() []*api.Job {
 	return q.jobs
 }
 
 // Enqueue adds a job to the end of the queue
-func (q *JobQueue) Enqueue(job *Job) {
+func (q *JobQueue) Enqueue(job *api.Job) {
 	q.jobs = append(q.jobs, job)
 }
 
 // Dequeue removes and returns the job at the front of the queue
-func (q *JobQueue) Dequeue() (*Job, bool) {
+func (q *JobQueue) Dequeue() (*api.Job, bool) {
 	if len(q.jobs) == 0 {
 		return nil, false
 	}
@@ -29,7 +31,7 @@ func (q *JobQueue) Dequeue() (*Job, bool) {
 }
 
 // Peek returns the job at the front of the queue without removing it
-func (q *JobQueue) Peek() (*Job, bool) {
+func (q *JobQueue) Peek() (*api.Job, bool) {
 	if len(q.jobs) == 0 {
 		return nil, false
 	}

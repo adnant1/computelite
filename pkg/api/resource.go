@@ -1,4 +1,4 @@
-package resource
+package api
 
 type Resource struct {
 	CPU    int64 // CPU resource in millicores

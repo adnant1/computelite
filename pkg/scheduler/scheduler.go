@@ -3,6 +3,7 @@ package scheduler
 import (
 	"log"
 
+	"github.com/adnant1/computelite/pkg/api"
 	"github.com/adnant1/computelite/pkg/cluster"
 )
 
@@ -21,9 +22,9 @@ func NewScheduler(cluster *cluster.ClusterState) *Scheduler {
 
 // SubmitJob adds a new job to the pending jobs queue
 // does not schedule any jobs, only adds to the JobQueue
-func (s *Scheduler) SubmitJob(job *Job) {
+func (s *Scheduler) SubmitJob(job *api.Job) {
 	s.PendingJobs.Enqueue(job)
-	job.State = Pending
+	job.State = api.Pending
 	log.Printf("[scheduler] job=%d submitted (cpu=%d, mem=%d)\n",
 		job.ID,
 		job.Requires.CPU,
@@ -49,7 +50,7 @@ func (s *Scheduler) ScheduleOne() bool {
 			node.Allocated.Memory += job.Requires.Memory
 
 			s.Cluster.RunningJobs[job.ID] = node
-			job.State = Running
+			job.State = api.Running
 
 			log.Printf("[scheduler] job=%d scheduled on node=%s\n", job.ID, node.ID)
 			return true

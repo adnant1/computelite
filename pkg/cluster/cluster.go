@@ -4,25 +4,27 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/adnant1/computelite/pkg/api"
 )
 
 type ClusterState struct {
-	Nodes		map[string]*Node // Mapping of node IDs to Node structs
-	RunningJobs	map[int64]*Node  // Mapping of running job IDs to their assigned nodes
+	Nodes		map[string]*api.Node // Mapping of node IDs to Node structs
+	RunningJobs	map[int64]*api.Node  // Mapping of running job IDs to their assigned nodes
 }
 
 // NewCluster initializes and returns a new ClusterState
 func NewCluster() *ClusterState {
 	return &ClusterState{
-		Nodes:		 make(map[string]*Node),
-		RunningJobs: make(map[int64]*Node),
+		Nodes:		 make(map[string]*api.Node),
+		RunningJobs: make(map[int64]*api.Node),
 	}
 }
 
 // AddNode adds a new node to the cluster state
-func (cs *ClusterState) AddNode(node *Node) {
+func (cs *ClusterState) AddNode(node *api.Node) {
 	cs.Nodes[node.ID] = node
-	log.Printf("[cluster] node=%s added (cpu=%d, mem=%d)\n",
+	log.Printf("[cluster] node=%s added (cpu=%d, memory=%d)\n",
 		node.ID,
 		node.TotalCapacity.CPU,
 		node.TotalCapacity.Memory,
@@ -41,7 +43,7 @@ func (cs *ClusterState) RecordHeartbeat(nodeID string) error {
 }
 
 // UpdateNodeHealth updates the health status of a given node
-func (cs *ClusterState) UpdateNodeHealth(nodeID string, newHealth NodeHealth) error {
+func (cs *ClusterState) UpdateNodeHealth(nodeID string, newHealth api.NodeHealth) error {
 	node, exists := cs.Nodes[nodeID]
 	if !exists {
 		return fmt.Errorf("node with ID %s not found", nodeID)
