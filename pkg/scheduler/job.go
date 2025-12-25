@@ -7,7 +7,11 @@ type JobState int
 // Define job states
 const (
 	Pending JobState = iota
+	Assigned
 	Running
+	Succeeded
+	Failed
+	Evicted
 )
 
 type Job struct {
