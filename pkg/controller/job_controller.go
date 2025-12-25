@@ -3,6 +3,7 @@ package controller
 import (
 	"time"
 
+	"github.com/adnant1/computelite/pkg/api"
 	"github.com/adnant1/computelite/pkg/cluster"
 )
 
@@ -17,6 +18,41 @@ func NewJobController(cs *cluster.ClusterState, interval time.Duration) *JobCont
 	return &JobController{
 		clusterState:      cs,
 		reconcileInterval: interval,
+	}
+}
+
+// Run begins watching and managing jobs
+func (jc *JobController) Run() {
+	ticker := time.NewTicker(jc.reconcileInterval)
+	defer ticker.Stop()
+
+	// will soon add stop channel handling
+	for {
+		select {
+		case <-ticker.C:
+			jc.reconcile()
+		}
+	}
+}
+
+// reconcile checks the state of each job and updates their status accordingly
+func (jc *JobController) reconcile() {
+	now := time.Now()
+
+	for jobID, job := range jc.clusterState.Jobs {
+		switch job.State {
+		case api.Assigned:
+			if job.AssignedNodeID != "" {
+				jc.clusterState.UpdateJobState(jobID, api.Running)
+			}
+		case api.Running:
+			if now.Sub(job.StartedAt) >= api.RunDuration {
+				jc.clusterState.UpdateJobState(jobID, api.Succeeded)
+			}
+		// other states do not require action
+		default:
+			continue
+		}
 	}
 }
 
