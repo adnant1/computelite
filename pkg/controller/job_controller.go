@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"time"
 
 	"github.com/adnant1/computelite/pkg/api"
@@ -44,10 +45,12 @@ func (jc *JobController) reconcile() {
 		case api.Assigned:
 			if job.AssignedNodeID != "" {
 				jc.clusterState.UpdateJobState(jobID, api.Running)
+				log.Printf("[job-controller] job=%d assigned -> running (node=%s)", jobID, job.AssignedNodeID)
 			}
 		case api.Running:
 			if now.Sub(job.StartedAt) >= api.RunDuration {
 				jc.clusterState.UpdateJobState(jobID, api.Succeeded)
+				log.Printf("[job-controller] job=%d running -> succeeded (duration=%s)", jobID, api.RunDuration)
 			}
 		// other states do not require action
 		default:
