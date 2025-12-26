@@ -23,15 +23,17 @@ func NewHealthController(cs *cluster.ClusterState, interval time.Duration) *Heal
 }
 
 // Run begins monitoring and updating
-func (hc *HealthController) Run() {
+func (hc *HealthController) Run(stop <-chan struct{}) {
 	ticker := time.NewTicker(hc.reconcileInterval)
 	defer ticker.Stop()
 
-	// will soon add stop channel handling
 	for {
 		select {
 		case <-ticker.C:
 			hc.reconcile()
+		case <-stop:
+			log.Printf("[health-controller] stopping health controller")
+			return
 		}
 	}
 }

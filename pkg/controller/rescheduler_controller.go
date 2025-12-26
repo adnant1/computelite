@@ -23,15 +23,17 @@ func NewReschedulerController(cs *cluster.ClusterState, interval time.Duration) 
 }
 
 // Run begins watching and managing job rescheduling
-func (rc *ReschedulerController) Run() {
+func (rc *ReschedulerController) Run(stop <-chan struct{}) {
 	ticker := time.NewTicker(rc.reconcileInterval)
 	defer ticker.Stop()
 
-	// will soon add stop channel handling
 	for {
 		select {
 		case <-ticker.C:
 			rc.reconcile()
+		case <-stop:
+			log.Printf("[rescheduler-controller] stopping rescheduler controller")
+			return
 		}
 	}
 }

@@ -26,15 +26,17 @@ func NewSchedulerController(clusterState *cluster.ClusterState, policy scheduler
 }
 
 // Run begins watching and scheduling jobs
-func (sc *SchedulerController) Run() {
+func (sc *SchedulerController) Run(stop <-chan struct{}) {
 	ticker := time.NewTicker(sc.reconcileInterval)
 	defer ticker.Stop()
 
-	// will soon add stop channel handling
 	for {
 		select {
 		case <-ticker.C:
 			sc.reconcile()
+		case <-stop:
+			log.Printf("[scheduler-controller] stopping scheduler controller")
+			return
 		}
 	}
 }

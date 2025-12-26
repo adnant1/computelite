@@ -23,15 +23,17 @@ func NewJobController(cs *cluster.ClusterState, interval time.Duration) *JobCont
 }
 
 // Run begins watching and managing jobs
-func (jc *JobController) Run() {
+func (jc *JobController) Run(stop <-chan struct{}) {
 	ticker := time.NewTicker(jc.reconcileInterval)
 	defer ticker.Stop()
 
-	// will soon add stop channel handling
 	for {
 		select {
 		case <-ticker.C:
 			jc.reconcile()
+		case <-stop:
+			log.Printf("[job-controller] stopping job controller")
+			return
 		}
 	}
 }
