@@ -6,11 +6,11 @@ import "github.com/adnant1/computelite/pkg/api"
 type BestFitPolicy struct{}
 
 // SelectNode selects the node that best fits the job's resource requirements
-func (p *BestFitPolicy) SelectNode(job *api.Job, nodes map[string]*api.Node) (string, bool) {
+func (p *BestFitPolicy) SelectNode(job *api.Job, nodes []*api.Node) (string, bool) {
 	var bestNodeID string
 	var bestScore int64 = -1
 
-	for nodeID, node := range nodes {
+	for _, node := range nodes {
 		availableCPU := node.TotalCapacity.CPU - node.Allocated.CPU
 		availableMemory := node.TotalCapacity.Memory - node.Allocated.Memory
 
@@ -21,7 +21,7 @@ func (p *BestFitPolicy) SelectNode(job *api.Job, nodes map[string]*api.Node) (st
 
 			if bestScore == -1 || score < bestScore {
 				bestScore = score
-				bestNodeID = nodeID
+				bestNodeID = node.ID
 			}
 		}
 	}

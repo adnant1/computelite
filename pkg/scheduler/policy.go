@@ -4,5 +4,5 @@ import "github.com/adnant1/computelite/pkg/api"
 
 // SchedulerPolicy defines the interface for scheduling policies
 type SchedulerPolicy interface {
-	SelectNode(job *api.Job, nodes map[string]*api.Node) (string, bool)
+	SelectNode(job *api.Job, nodes []*api.Node) (string, bool)
 }
