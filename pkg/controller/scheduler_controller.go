@@ -51,26 +51,27 @@ func (sc *SchedulerController) reconcile() {
 		return
 	}
 
-	for _, job := range pendingJobs {
-		nodeID, ok := sc.policy.SelectNode(job, healthyNodes)
-
-		if !ok {
-			log.Printf("[scheduler-controller] job=%d pending: no suitable node found", job.ID)
-			return
-		}
-
-		err := sc.clusterState.AssignJob(job.ID, nodeID)
-		if err != nil {
-			log.Printf("[scheduler-controller] job=%d failed to assign to node=%s: %v", job.ID, nodeID, err)
-			return
-		}
-
-		log.Printf("[scheduler-controller] job=%d assigned to node=%s (cpu=%d, mem=%d)", 
-		job.ID, 
-		nodeID, 
-		job.Requires.CPU, 
-		job.Requires.Memory)
+	if len(pendingJobs) == 0 {
 		return
-		
 	}
+
+	job := pendingJobs[0]
+	nodeID, ok := sc.policy.SelectNode(job, healthyNodes)
+
+	if !ok {
+		log.Printf("[scheduler-controller] job=%d pending: no suitable node found", job.ID)
+		return
+	}
+
+	err := sc.clusterState.AssignJob(job.ID, nodeID)
+	if err != nil {
+		log.Printf("[scheduler-controller] job=%d failed to assign to node=%s: %v", job.ID, nodeID, err)
+		return
+	}
+
+	log.Printf("[scheduler-controller] job=%d assigned to node=%s (cpu=%d, mem=%d)",
+		job.ID,
+		nodeID,
+		job.Requires.CPU,
+		job.Requires.Memory)
 }
