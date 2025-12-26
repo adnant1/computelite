@@ -146,6 +146,24 @@ func (cs *ClusterState) EvictAndRequeueJob(jobID int64) error {
 		return nil
 	}
 
+	node, exists := cs.Nodes[job.AssignedNodeID]
+	if !exists {
+		return fmt.Errorf("node with ID %s not found", job.AssignedNodeID)
+	}
+
+	// Free up resources on the node
+	node.Allocated.CPU -= job.Requires.CPU
+	node.Allocated.Memory -= job.Requires.Memory
+
+	// Safe guards against negative allocation
+	if node.Allocated.CPU < 0 {
+		node.Allocated.CPU = 0
+	}
+
+	if node.Allocated.Memory < 0 {
+		node.Allocated.Memory = 0
+	}
+
 	job.AssignedNodeID = ""
 
 	err := cs.updateJobStateLocked(jobID, api.Evicted)
