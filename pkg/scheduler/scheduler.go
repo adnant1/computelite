@@ -20,18 +20,6 @@ func NewScheduler(cluster *cluster.ClusterState) *Scheduler {
 	}
 }
 
-// SubmitJob adds a new job to the pending jobs queue
-// does not schedule any jobs, only adds to the JobQueue
-func (s *Scheduler) SubmitJob(job *api.Job) {
-	s.PendingJobs.Enqueue(job)
-	job.State = api.Pending
-	log.Printf("[scheduler] job=%d submitted (cpu=%d, mem=%d)\n",
-		job.ID,
-		job.Requires.CPU,
-		job.Requires.Memory,
-	)
-}
-
 // ScheduleOne attempts to schedule one pending job onto a suitable node
 // for simplicity, it uses a first-fit algorithm
 func (s *Scheduler) ScheduleOne() bool {

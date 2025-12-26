@@ -31,6 +31,27 @@ func (cs *ClusterState) AddNode(node *api.Node) {
 	)
 }
 
+// SubmitJob adds a new job to the cluster state
+func (cs *ClusterState) SubmitJob(job *api.Job) error {
+	_, exists := cs.Jobs[job.ID]
+	if exists {
+		return fmt.Errorf("job with ID %d already exists", job.ID)
+	}
+
+	cs.Jobs[job.ID] = job
+	err := cs.UpdateJobState(job.ID, api.Pending)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[cluster] job=%d submitted (cpu=%d, mem=%d)\n",
+		job.ID,
+		job.Requires.CPU,
+		job.Requires.Memory,
+	)
+	return nil
+}
+
 // RecordHeartbeat updates the last heartbeat timestamp for a given node
 func (cs *ClusterState) RecordHeartbeat(nodeID string) error {
 	node, exists := cs.Nodes[nodeID]
