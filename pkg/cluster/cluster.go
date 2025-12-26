@@ -125,6 +125,10 @@ func (cs *ClusterState) updateJobStateLocked(jobID int64, newState api.JobState)
 	}
 
 	job.State = newState
+	if newState == api.Running {
+		job.StartedAt = time.Now()
+	}
+
 	return nil
 }
 
