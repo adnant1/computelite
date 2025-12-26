@@ -43,39 +43,34 @@ func (sc *SchedulerController) Run(stop <-chan struct{}) {
 
 // reconcile checks for a single pending job and attempts to schedule it onto a healthy node
 func (sc *SchedulerController) reconcile() {
-	healthyNodes := make(map[string]*api.Node)
-	for nodeID, node := range sc.clusterState.Nodes {
-		if node.Health == api.Healthy {
-			healthyNodes[nodeID] = node
-		}
-	}
+	healthyNodes := sc.clusterState.ListHealthyNodes()
+	pendingJobs := sc.clusterState.ListJobsByState(api.Pending)
 
 	if len(healthyNodes) == 0 {
 		log.Printf("[scheduler-controller] no healthy nodes available for scheduling")
 		return
 	}
 
-	for jobID, job := range sc.clusterState.Jobs {
-		if job.State == api.Pending {
-			nodeID, ok := sc.policy.SelectNode(job, healthyNodes)
+	for _, job := range pendingJobs {
+		nodeID, ok := sc.policy.SelectNode(job, healthyNodes)
 
-			if !ok {
-				log.Printf("[scheduler-controller] job=%d pending: no suitable node found", jobID)
-				return
-			}
-
-			err := sc.clusterState.AssignJob(jobID, nodeID)
-			if err != nil {
-				log.Printf("[scheduler-controller] job=%d failed to assign to node=%s: %v", jobID, nodeID, err)
-				return
-			}
-
-			log.Printf("[scheduler-controller] job=%d assigned to node=%s (cpu=%d, mem=%d)", 
-			jobID, 
-			nodeID, 
-			job.Requires.CPU, 
-			job.Requires.Memory)
+		if !ok {
+			log.Printf("[scheduler-controller] job=%d pending: no suitable node found", job.ID)
 			return
 		}
+
+		err := sc.clusterState.AssignJob(job.ID, nodeID)
+		if err != nil {
+			log.Printf("[scheduler-controller] job=%d failed to assign to node=%s: %v", job.ID, nodeID, err)
+			return
+		}
+
+		log.Printf("[scheduler-controller] job=%d assigned to node=%s (cpu=%d, mem=%d)", 
+		job.ID, 
+		nodeID, 
+		job.Requires.CPU, 
+		job.Requires.Memory)
+		return
+		
 	}
 }

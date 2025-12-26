@@ -41,13 +41,14 @@ func (hc *HealthController) Run(stop <-chan struct{}) {
 // reconcile checks the health of each node and updates their status accordingly
 func (hc *HealthController) reconcile() {
 	now := time.Now()
+	nodes := hc.clusterState.ListNodes()
 
-	for nodeID, node := range hc.clusterState.Nodes {
+	for _, node := range nodes {
 		desiredHealth := cluster.EvaluateNodeHealth(node.LastHeartbeat, now)
 
 		if node.Health != desiredHealth {
-			hc.clusterState.UpdateNodeHealth(nodeID, desiredHealth)
-			log.Printf("[health-controller] node=%s health changed to %s", nodeID, desiredHealth)
+			hc.clusterState.UpdateNodeHealth(node.ID, desiredHealth)
+			log.Printf("[health-controller] node=%s health changed to %s", node.ID, desiredHealth)
 		}
 	}
 }

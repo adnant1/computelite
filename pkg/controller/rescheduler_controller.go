@@ -40,14 +40,39 @@ func (rc *ReschedulerController) Run(stop <-chan struct{}) {
 
 // reconcile checks for jobs on unhealthy nodes and reschedules them
 func (rc *ReschedulerController) reconcile() {
-	for jobID, job := range rc.clusterState.Jobs {
-		if job.AssignedNodeID != "" {
-			node, exists := rc.clusterState.Nodes[job.AssignedNodeID]
+	jobs := rc.clusterState.ListJobs()
+	nodes := rc.clusterState.ListNodes()
 
-			if exists && node.Health == api.Unhealthy {
-				rc.clusterState.EvictAndRequeueJob(jobID)
-				log.Printf("[rescheduler-controller] job=%d evicted from node=%s (node unhealthy)", jobID, job.AssignedNodeID)
+	// Build a quick lookup for node health
+	nodeHealth := make(map[string]api.NodeHealth, len(nodes))
+	for _, node := range nodes {
+		nodeHealth[node.ID] = node.Health
+	}
+
+	for _, job := range jobs {
+		if job.AssignedNodeID == "" {
+			continue
+		}
+
+		health := nodeHealth[job.AssignedNodeID]
+
+		if health == api.Unhealthy {
+			err := rc.clusterState.EvictAndRequeueJob(job.ID)
+			if err != nil {
+				log.Printf(
+					"[rescheduler-controller] failed to evict job=%d from node=%s: %v",
+					job.ID,
+					job.AssignedNodeID,
+					err,
+				)
+				continue
 			}
+
+			log.Printf(
+				"[rescheduler-controller] job=%d evicted from node=%s (node unhealthy)",
+				job.ID,
+				job.AssignedNodeID,
+			)
 		}
 	}
 }

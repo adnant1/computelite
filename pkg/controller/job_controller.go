@@ -38,25 +38,23 @@ func (jc *JobController) Run(stop <-chan struct{}) {
 	}
 }
 
-// reconcile checks the state of each job and updates their status accordingly
+// reconcile updates job states accordingly
 func (jc *JobController) reconcile() {
 	now := time.Now()
+	assignedJobs := jc.clusterState.ListJobsByState(api.Assigned)
+	runningJobs := jc.clusterState.ListJobsByState(api.Running)
 
-	for jobID, job := range jc.clusterState.Jobs {
-		switch job.State {
-		case api.Assigned:
-			if job.AssignedNodeID != "" {
-				jc.clusterState.UpdateJobState(jobID, api.Running)
-				log.Printf("[job-controller] job=%d assigned -> running (node=%s)", jobID, job.AssignedNodeID)
-			}
-		case api.Running:
-			if now.Sub(job.StartedAt) >= api.RunDuration {
-				jc.clusterState.UpdateJobState(jobID, api.Succeeded)
-				log.Printf("[job-controller] job=%d running -> succeeded (duration=%s)", jobID, api.RunDuration)
-			}
-		// other states do not require action
-		default:
-			continue
+	for _, job := range assignedJobs {
+		if job.AssignedNodeID != "" {
+			jc.clusterState.UpdateJobState(job.ID, api.Running)
+			log.Printf("[job-controller] job=%d assigned -> running (node=%s)", job.ID, job.AssignedNodeID)
+		}
+	}
+
+	for _, job := range runningJobs {
+		if now.Sub(job.StartedAt) >= api.RunDuration {
+			jc.clusterState.UpdateJobState(job.ID, api.Succeeded)
+			log.Printf("[job-controller] job=%d running -> succeeded (duration=%s)", job.ID, api.RunDuration)
 		}
 	}
 }
