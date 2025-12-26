@@ -113,3 +113,41 @@ func (cs *ClusterState) EvictAndRequeueJob(jobID int64) error {
 
 	return nil
 }
+
+// AssignJob assigns a pending job to a healthy node if resources permit
+func (cs *ClusterState) AssignJob(jobID int64, nodeID string) error {
+	job, jobExists := cs.Jobs[jobID]
+	if !jobExists {
+		return fmt.Errorf("job with ID %d not found", jobID)
+	}
+
+	node, nodeExists := cs.Nodes[nodeID]
+	if !nodeExists {
+		return fmt.Errorf("node with ID %s not found", nodeID)
+	}
+
+	if job.State != api.Pending {
+		return fmt.Errorf("job %d is not in pending state", jobID)
+	}
+
+	if node.Health != api.Healthy {
+		return fmt.Errorf("node %s is not healthy", nodeID)
+	}
+
+	if node.Allocated.CPU + job.Requires.CPU > node.TotalCapacity.CPU ||
+		node.Allocated.Memory + job.Requires.Memory > node.TotalCapacity.Memory {
+		return fmt.Errorf("node %s does not have enough resources for job %d", nodeID, jobID)
+	}
+
+	err := cs.UpdateJobState(jobID, api.Assigned)
+	if err != nil {
+		return err
+	}
+
+	node.Allocated.CPU += job.Requires.CPU
+	node.Allocated.Memory += job.Requires.Memory
+
+	job.AssignedNodeID = nodeID
+
+	return nil
+}
