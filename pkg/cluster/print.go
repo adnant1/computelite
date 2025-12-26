@@ -1,58 +1,74 @@
 package cluster
 
-import "fmt"
+import (
+	"fmt"
 
-// TODO: Update these print functions after implementing job scheduling and tracking.
+	"github.com/adnant1/computelite/pkg/api"
+)
 
-// PrintSummary prints a high-level overview of the cluster state.
-func (cs *ClusterState) PrintSummary() {
-	fmt.Println("=== Cluster Summary ===")
-	fmt.Printf("Nodes: %d\n", len(cs.Nodes))
-	fmt.Printf("Running Jobs: %d\n", len(cs.Jobs))
+// PrintSnapshot prints a snapshot of the current cluster state
+func (cs *ClusterState) PrintSnapshot() {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+
+	fmt.Println("\n================ CLUSTER SNAPSHOT ================")
+	cs.printJobSummaryLocked()
+	cs.printNodeUtilizationLocked()
+	cs.printNodeHealthLocked()
+	fmt.Println("==================================================")
 }
 
-// PrintNodeUtilization prints resource usage for each node.
-func (cs *ClusterState) PrintNodeUtilization() {
-	fmt.Println("\n=== Node Utilization ===")
+// printJobSummaryLocked prints a summary of jobs in the cluster
+func (cs *ClusterState) printJobSummaryLocked() {
+	counts := map[api.JobState]int{}
+
+	for _, job := range cs.Jobs {
+		counts[job.State]++
+	}
+
+	fmt.Println("\nJobs:")
+	fmt.Printf(
+		"  Pending=%d Assigned=%d Running=%d Succeeded=%d Failed=%d Evicted=%d\n",
+		counts[api.Pending],
+		counts[api.Assigned],
+		counts[api.Running],
+		counts[api.Succeeded],
+		counts[api.Failed],
+		counts[api.Evicted],
+	)
+}
+
+// printNodeUtilizationLocked prints resource utilization for each node
+func (cs *ClusterState) printNodeUtilizationLocked() {
+	fmt.Println("\nNode Utilization:")
 
 	for _, node := range cs.Nodes {
-		fmt.Printf("Node %s:\n", node.ID)
-		fmt.Printf("  CPU:    %d / %d\n",
+		fmt.Printf(
+			"  %s | CPU %d/%d | MEM %d/%d\n",
+			node.ID,
 			node.Allocated.CPU,
 			node.TotalCapacity.CPU,
-		)
-		fmt.Printf("  Memory: %d / %d\n",
 			node.Allocated.Memory,
 			node.TotalCapacity.Memory,
 		)
 	}
 }
 
-// PrintRunningJobs prints all running jobs and their assigned nodes.
-func (cs *ClusterState) PrintRunningJobs() {
-	fmt.Println("\n=== Running Jobs ===")
-
-	if len(cs.Jobs) == 0 {
-		fmt.Println("No running jobs")
-		return
-	}
-
-	for jobID, job := range cs.Jobs {
-		fmt.Printf("Job %d -> %d\n", jobID, job.ID)
-	}
-}
-
-// PrintNodeStatus prints the health and last heartbeat of each node.
-func (cs *ClusterState) PrintNodeStatus() {
-	fmt.Println("\n=== Node Status ===")
+// printNodeHealthLocked prints the health status of each node
+func (cs *ClusterState) printNodeHealthLocked() {
+	fmt.Println("\nNode Health:")
 
 	for _, node := range cs.Nodes {
-		fmt.Printf("Node %s:\n", node.ID)
-		fmt.Printf("  Health: %s\n", node.Health)
+		hb := "never"
 		if !node.LastHeartbeat.IsZero() {
-			fmt.Printf("  Last Heartbeat: %s\n", node.LastHeartbeat.Format("2006-01-02 15:04:05"))
-		} else {
-			fmt.Printf("  Last Heartbeat: Never\n")
+			hb = node.LastHeartbeat.Format("15:04:05")
 		}
+
+		fmt.Printf(
+			"  %s | %s | last heartbeat=%s\n",
+			node.ID,
+			node.Health,
+			hb,
+		)
 	}
 }
