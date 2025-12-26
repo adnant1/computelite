@@ -84,3 +84,32 @@ func (cs *ClusterState) UpdateJobState(jobID int64, newState api.JobState) error
 	return nil
 }
 
+// EvictAndRequeueJob evicts a job from its assigned node and re-queues it
+func (cs *ClusterState) EvictAndRequeueJob(jobID int64) error {
+	job, exists := cs.Jobs[jobID]
+	if !exists {
+		return fmt.Errorf("job with ID %d not found", jobID)
+	}
+
+	if job.State == api.Succeeded || job.State == api.Failed {
+		return fmt.Errorf("job %d is already completed with state %v", jobID, job.State)
+	}
+
+	if job.AssignedNodeID == "" && job.State == api.Pending {
+		return nil
+	}
+
+	job.AssignedNodeID = ""
+
+	err := cs.UpdateJobState(jobID, api.Evicted)
+	if err != nil {
+		return err
+	}
+
+	err = cs.UpdateJobState(jobID, api.Pending)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
