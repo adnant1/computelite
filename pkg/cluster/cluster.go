@@ -219,3 +219,59 @@ func (cs *ClusterState) AssignJob(jobID int64, nodeID string) error {
 
 	return nil
 }
+
+// ListJobs returns a slice of all jobs in the cluster
+func (cs *ClusterState) ListJobs() []*api.Job {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+
+	jobs := make([]*api.Job, 0, len(cs.Jobs))
+	for _, job := range cs.Jobs {
+		jobs = append(jobs, job)
+	}
+
+	return jobs
+}
+
+// ListJobsByState returns a slice of jobs filtered by the specified state
+func (cs *ClusterState) ListJobsByState(state api.JobState) []*api.Job {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+
+	jobs := make([]*api.Job, 0)
+	for _, job := range cs.Jobs {
+		if job.State == state {
+			jobs = append(jobs, job)
+		}
+	}
+
+	return jobs
+}
+
+// ListNodes returns a slice of all nodes in the cluster
+func (cs *ClusterState) ListNodes() []*api.Node {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+
+	nodes := make([]*api.Node, 0, len(cs.Nodes))
+	for _, node := range cs.Nodes {
+		nodes = append(nodes, node)
+	}
+
+	return nodes
+}
+
+// ListHealthyNodes returns a slice of all healthy nodes in the cluster
+func (cs *ClusterState) ListHealthyNodes() []*api.Node {
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
+
+	nodes := make([]*api.Node, 0)
+	for _, node := range cs.Nodes {
+		if node.Health == api.Healthy {
+			nodes = append(nodes, node)
+		}
+	}
+
+	return nodes
+}
