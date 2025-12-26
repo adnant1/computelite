@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/adnant1/computelite/pkg/api"
@@ -11,6 +12,8 @@ import (
 type ClusterState struct {
 	Nodes		map[string]*api.Node // Mapping of node IDs to Node structs
 	Jobs		map[int64]*api.Job   // Mapping of job IDs to their Job structs
+
+	mu 	  		sync.RWMutex
 }
 
 // NewCluster initializes and returns a new ClusterState
@@ -23,8 +26,11 @@ func NewCluster() *ClusterState {
 
 // AddNode adds a new node to the cluster state
 func (cs *ClusterState) AddNode(node *api.Node) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	cs.Nodes[node.ID] = node
-	log.Printf("[cluster] node=%s added (cpu=%d, memory=%d)\n",
+	log.Printf("[cluster] node=%s added (cpu=%d, memory=%d)",
 		node.ID,
 		node.TotalCapacity.CPU,
 		node.TotalCapacity.Memory,
@@ -33,18 +39,21 @@ func (cs *ClusterState) AddNode(node *api.Node) {
 
 // SubmitJob adds a new job to the cluster state
 func (cs *ClusterState) SubmitJob(job *api.Job) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	_, exists := cs.Jobs[job.ID]
 	if exists {
 		return fmt.Errorf("job with ID %d already exists", job.ID)
 	}
 
 	cs.Jobs[job.ID] = job
-	err := cs.UpdateJobState(job.ID, api.Pending)
+	err := cs.updateJobStateLocked(job.ID, api.Pending)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[cluster] job=%d submitted (cpu=%d, mem=%d)\n",
+	log.Printf("[cluster] job=%d submitted (cpu=%d, mem=%d)",
 		job.ID,
 		job.Requires.CPU,
 		job.Requires.Memory,
@@ -54,6 +63,9 @@ func (cs *ClusterState) SubmitJob(job *api.Job) error {
 
 // RecordHeartbeat updates the last heartbeat timestamp for a given node
 func (cs *ClusterState) RecordHeartbeat(nodeID string) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	node, exists := cs.Nodes[nodeID]
 	if !exists {
 		return fmt.Errorf("node with ID %s not found", nodeID)
@@ -65,6 +77,9 @@ func (cs *ClusterState) RecordHeartbeat(nodeID string) error {
 
 // UpdateNodeHealth updates the health status of a given node
 func (cs *ClusterState) UpdateNodeHealth(nodeID string, newHealth api.NodeHealth) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	node, exists := cs.Nodes[nodeID]
 	if !exists {
 		return fmt.Errorf("node with ID %s not found", nodeID)
@@ -79,6 +94,14 @@ func (cs *ClusterState) UpdateNodeHealth(nodeID string, newHealth api.NodeHealth
 
 // UpdateJobState updates the state of a given job enforcing valid state transitions
 func (cs *ClusterState) UpdateJobState(jobID int64, newState api.JobState) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	return cs.updateJobStateLocked(jobID, newState)
+}
+
+// updateJobStateLocked is the internal version that assumes the lock is already held
+func (cs *ClusterState) updateJobStateLocked(jobID int64, newState api.JobState) error {
 	job, exists := cs.Jobs[jobID]
 	if !exists {
 		return fmt.Errorf("job with ID %d not found", jobID)
@@ -107,6 +130,9 @@ func (cs *ClusterState) UpdateJobState(jobID int64, newState api.JobState) error
 
 // EvictAndRequeueJob evicts a job from its assigned node and re-queues it
 func (cs *ClusterState) EvictAndRequeueJob(jobID int64) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	job, exists := cs.Jobs[jobID]
 	if !exists {
 		return fmt.Errorf("job with ID %d not found", jobID)
@@ -122,12 +148,12 @@ func (cs *ClusterState) EvictAndRequeueJob(jobID int64) error {
 
 	job.AssignedNodeID = ""
 
-	err := cs.UpdateJobState(jobID, api.Evicted)
+	err := cs.updateJobStateLocked(jobID, api.Evicted)
 	if err != nil {
 		return err
 	}
 
-	err = cs.UpdateJobState(jobID, api.Pending)
+	err = cs.updateJobStateLocked(jobID, api.Pending)
 	if err != nil {
 		return err
 	}
@@ -137,6 +163,9 @@ func (cs *ClusterState) EvictAndRequeueJob(jobID int64) error {
 
 // AssignJob assigns a pending job to a healthy node if resources permit
 func (cs *ClusterState) AssignJob(jobID int64, nodeID string) error {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	job, jobExists := cs.Jobs[jobID]
 	if !jobExists {
 		return fmt.Errorf("job with ID %d not found", jobID)
@@ -160,7 +189,7 @@ func (cs *ClusterState) AssignJob(jobID int64, nodeID string) error {
 		return fmt.Errorf("node %s does not have enough resources for job %d", nodeID, jobID)
 	}
 
-	err := cs.UpdateJobState(jobID, api.Assigned)
+	err := cs.updateJobStateLocked(jobID, api.Assigned)
 	if err != nil {
 		return err
 	}
