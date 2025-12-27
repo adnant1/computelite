@@ -189,3 +189,9 @@ ComputeLite demonstrates how a real compute control plane behaves:
 - always converging
 - resilient to failure
 - cleanly structured
+
+---
+
+## 👨‍💻 Author
+
+**Adnan T.** — [@adnant1](https://github.com/adnant1)
