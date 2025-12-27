@@ -18,7 +18,7 @@ ComputeLite goes further by modeling:
 - job eviction and rescheduling
 - clean startup and graceful shutdown
 
-This project is designed to explore **compute-layer infrastructure fundamentals**, similar to the internals of Kubernetes, Nomad, or Mesos—without external dependencies.
+This project is designed to explore **compute infrastructure fundamentals**, similar to the internals of Kubernetes or Borg without any external dependencies.
 
 ---
 
