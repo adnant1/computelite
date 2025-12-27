@@ -6,7 +6,7 @@ import (
 	"github.com/adnant1/computelite/pkg/api"
 )
 
-const HeartbeatTimeout = 15 * time.Second
+const HeartbeatTimeout = 3 * time.Second
 
 // EvaluateNodeHealth determines the health status of a node based on its last heartbeat timestamp
 func EvaluateNodeHealth(lastHeartbeat time.Time, now time.Time) api.NodeHealth {
