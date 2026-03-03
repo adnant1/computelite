@@ -7,21 +7,6 @@ The system runs as a **long-lived daemon**, converging cluster state over time r
 
 ---
 
-## Motivation
-
-Most scheduling demos stop at “assign jobs to nodes.”
-ComputeLite goes further by modeling:
-
-- continuous reconciliation instead of one-shot scheduling
-- node health via heartbeats
-- failure detection based on time
-- job eviction and rescheduling
-- clean startup and graceful shutdown
-
-This project is designed to explore **compute infrastructure fundamentals**, similar to the internals of Kubernetes or Borg without any external dependencies.
-
----
-
 ## High-Level Architecture
 
 ComputeLite is structured as a **control plane + node agents** system.
